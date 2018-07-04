@@ -1,0 +1,46 @@
+PODS:
+  - device_info (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_local_notifications (0.0.1):
+    - Flutter
+  - image_picker (0.0.1):
+    - Flutter
+  - package_info (0.0.1):
+    - Flutter
+  - path_provider (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - device_info (from `.symlinks/plugins/device_info/ios`)
+  - Flutter (from `.symlinks/flutter/ios`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - package_info (from `.symlinks/plugins/package_info/ios`)
+  - path_provider (from `.symlinks/plugins/path_provider/ios`)
+
+EXTERNAL SOURCES:
+  device_info:
+    :path: .symlinks/plugins/device_info/ios
+  Flutter:
+    :path: .symlinks/flutter/ios
+  flutter_local_notifications:
+    :path: .symlinks/plugins/flutter_local_notifications/ios
+  image_picker:
+    :path: .symlinks/plugins/image_picker/ios
+  package_info:
+    :path: .symlinks/plugins/package_info/ios
+  path_provider:
+    :path: .symlinks/plugins/path_provider/ios
+
+SPEC CHECKSUMS:
+  device_info: 76ce0b32e13034d1883be4a382433648f9dcee63
+  Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
+  flutter_local_notifications: 696a74904e0a0ab754e27a5f761da4a7f9153710
+  image_picker: ee00aab0487cedc80a304085219503cc6d0f2e22
+  package_info: d7c98b64f60add4c2908b9d94d82a45d3c8827ad
+  path_provider: 09407919825bfe3c2deae39453b7a5b44f467873
+
+PODFILE CHECKSUM: 1e5af4103afd21ca5ead147d7b81d06f494f51a2
+
+COCOAPODS: 1.4.0
