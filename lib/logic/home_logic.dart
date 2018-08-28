@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
+import 'package:open_file/open_file.dart';
 
 import '../bean/message.dart';
 import '../constant.dart';
@@ -119,8 +120,7 @@ class HomeLogic extends HomeLogicImpl {
   void _installApk(String path) async {
     log(path);
     log(Uri.file(path));
-    Map<String, String> map = {"path": path};
-    await platform.invokeMethod("install", map);
+    OpenFile.open(path);
   }
 
   @override
@@ -171,6 +171,7 @@ class HomeLogic extends HomeLogicImpl {
       Function onError,
       Function onDone}) {
     runZoned(() {
+      if(!_isConnected)
       connectSocket(onError: onError, onDone: onDone, onReceiver: onReceiver);
     }, onError: (_error) {
       log(_error);

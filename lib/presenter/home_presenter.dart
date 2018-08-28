@@ -36,7 +36,7 @@ class HomePresenter extends HomePresenterImpl {
   @override
   void start() async {
     _logic.initPlatformState();
-    _start();
+    connect();
     if (Platform.isAndroid) {
       PackageInfo.fromPlatform().then((info) {
         _logic.getApkVersion().then((data) {
@@ -54,7 +54,7 @@ class HomePresenter extends HomePresenterImpl {
     return _logic.deviceInfo;
   }
 
-  void _start() async {
+  void connect() async {
     await _logic.connectAndListen(
         onServerError: () => _view.showSnackBar("服务器未开启"),
         onReceiver: (message) => _view.receiverMessage(

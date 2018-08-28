@@ -8,6 +8,8 @@ import 'package:image/image.dart' as Im;
 import 'dart:typed_data';
 
 class CompressImage {
+  //忽略构造函数，即不支持new
+  CompressImage._();
   static Future<String> compressImage(CompressObject object) async {
     return compute(_decodeImage, object);
   }

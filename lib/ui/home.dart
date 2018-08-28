@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:simple_permissions/simple_permissions.dart';
+//import 'package:simple_permissions/simple_permissions.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../bean/message.dart';
@@ -17,7 +18,8 @@ import '../widget/clipboard_text.dart';
 import '../utils/string_util.dart';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, this.themeType,this.changeTheme}) : super(key: key);
+  MyHomePage({Key key, this.title, this.themeType, this.changeTheme})
+      : super(key: key);
 
   final String title;
   final Function changeTheme;
@@ -44,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
-    _isDark =  widget.themeType??false;
+    _isDark = widget.themeType ?? false;
     return new Scaffold(
       key: _key,
       appBar: new AppBar(
@@ -225,7 +227,11 @@ class _MyHomePageState extends State<MyHomePage>
               },
             ),
             new CupertinoButton(
-                child: new Text("发送",style: new TextStyle(color: Theme.of(context).textTheme.button.color),),
+                child: new Text(
+                  "发送",
+                  style: new TextStyle(
+                      color: Theme.of(context).textTheme.button.color),
+                ),
                 onPressed: () {
                   if (_controller.text.trim().length > 0) {
                     presenter.sendMessage(_controller.text);
@@ -263,6 +269,7 @@ class _MyHomePageState extends State<MyHomePage>
     } else {
       _isBackground = false;
       _cancelAllNotifications();
+//      presenter.connect();
     }
   }
 
@@ -371,10 +378,11 @@ class _MyHomePageState extends State<MyHomePage>
     var platformChannelSpecifics = new NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     if (message == null) {
-      await flutterLocalNotificationsPlugin.show(
+      await flutterLocalNotificationsPlugin.periodicallyShow(
           0,
           presenter.getDeviceName() ?? ConstantValue.APP_NAME,
           '正在运行中',
+          RepeatInterval.EveryMinute,
           platformChannelSpecifics);
     } else {
       await flutterLocalNotificationsPlugin.show(
@@ -410,7 +418,8 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void requestPermission() {
-    SimplePermissions.requestPermission(Permission.WriteExternalStorage);
+//    if (Platform.isAndroid)
+//      SimplePermissions.requestPermission(Permission.WriteExternalStorage);
   }
 }
 

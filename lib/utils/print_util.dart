@@ -1,4 +1,5 @@
-import '../constant.dart';
+import 'package:flutter/material.dart';
+
 void log(Object o) {
-  if (ConstantValue.DEBUG) print(o);
+  debugPrint(o.toString());
 }

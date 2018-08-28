@@ -12,7 +12,7 @@ List<String> parseUrl(str){
 List<String> getGifUrl(str){
   var urls = <String>[];
   parseUrl(str).forEach((_url){
-    if(_url.contains(".gif")){
+    if(_url.contains("gif")){
       urls.add(_url);
     }
   });
