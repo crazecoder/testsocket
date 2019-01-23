@@ -10,17 +10,54 @@ import 'dart:typed_data';
 class CompressImage {
   //忽略构造函数，即不支持new
   CompressImage._();
+
   static Future<String> compressImage(CompressObject object) async {
     return compute(_decodeImage, object);
   }
 
   static String _decodeImage(CompressObject object) {
     Im.Image image = Im.decodeImage(object.imageFile.readAsBytesSync());
-    Im.Image smallerImage = Im.copyResize(
-        image, object.compressWidth); // choose the size here, it will maintain aspect ratio
-    var decodedImageFile = new File(object.path + '/img_${object.rand}.jpg');
-    decodedImageFile.writeAsBytesSync(Im.encodeJpg(smallerImage, quality: 85));
-    return decodedImageFile.path;
+    var pw = image.width / image.height;
+    var ph = image.height / image.width;
+    int targetSize;
+    if ((pw < 1 && pw > 0.5625) || (ph < 1 && ph > 0.5625)) {
+      if (image.width > 1664 || image.height > 1664) {
+        targetSize = 300;
+      } else
+        targetSize = 150;
+    }
+    if ((pw < 0.5625 && pw > 0.5) || (ph < 0.5625 && ph > 0.5)) {
+      targetSize = 200;
+    }
+    if ((pw < 0.5 && pw > 0) || (ph < 0.5 && ph > 0)) {
+      targetSize = 500;
+    }
+    if (image.width > object.compressWidth ||
+        object.imageFile.lengthSync() / 1024 > targetSize) {
+      Im.Image smallerImage = Im.copyResize(
+          image,
+          object.compressWidth > image.width
+              ? image.width
+              : object
+                  .compressWidth); // choose the size here, it will maintain aspect ratio
+      var decodedImageFile = new File(object.path + '/img_${object.rand}.jpg');
+      _compressImage(smallerImage, decodedImageFile, targetSize);
+
+      return decodedImageFile.path;
+    } else {
+      return object.imageFile.path;
+    }
+  }
+
+  static _compressImage(Im.Image image, File file, targetSize) {
+    if (file.existsSync()) {
+      file.deleteSync();
+    }
+    file.writeAsBytesSync(Im.encodeJpg(image, quality: 85));
+    var decodedImageFileSize = file.lengthSync();
+    if (decodedImageFileSize / 1024 > targetSize) {
+      _compressImage(image, file, targetSize);
+    }
   }
 
   static String getImageBase64(File image) {
