@@ -1,21 +1,15 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-//import 'package:simple_permissions/simple_permissions.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
-import '../bean/message.dart';
+import 'package:connectivity/connectivity.dart';
+import '../bean/message.dart' as m;
 import '../constant.dart';
 import '../presenter/home_presenter.dart';
-import '../utils/image_util.dart';
-import '../utils/print_util.dart';
 import '../widget/update_dialog.dart';
-import '../widget/clipboard_text.dart';
-import '../utils/string_util.dart';
+import '../widget/message_item.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title, this.themeType, this.changeTheme})
@@ -32,7 +26,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with WidgetsBindingObserver, HomePageImpl, AutomaticKeepAliveClientMixin {
   var _controller = new TextEditingController();
-  var _messages = <Message>[];
+  var _messages = <m.Message>[];
   GlobalKey<ScaffoldState> _key = new GlobalKey();
 
   var _listController = ScrollController();
@@ -43,6 +37,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   GlobalKey<UpdateDialogState> _dialogKey = new GlobalKey();
   var _isDark;
+  var subscription;
 
   @override
   Widget build(BuildContext context) {
@@ -95,102 +90,12 @@ class _MyHomePageState extends State<MyHomePage>
       controller: _listController,
       itemCount: _messages.length,
       itemBuilder: (_, i) {
-        var _username;
-        var _style;
-        if (_messages[i].type == ConstantValue.NORMAL) {
-          _username = '${_messages[i].username} ：';
-          _style =
-              new TextStyle(color: Theme.of(context).textTheme.body1.color);
-        } else if (_messages[i].type == ConstantValue.IMAGE) {
-          _username = '${_messages[i].username} ：';
-          _style =
-              new TextStyle(color: Theme.of(context).textTheme.body1.color);
-          return _buildImageItem(_username, _style,
-              CompressImage.getImageByte(_messages[i].message));
-        } else {
-          _username = _messages[i].username;
-          _style = new TextStyle(color: Theme.of(context).primaryColor);
-        }
-        var content = _messages[i].message;
-        var gifUrls = getGifUrl(content);
-        var contentItem;
-        if (gifUrls.length == 0) {
-          contentItem = new Expanded(
-            child: new ClipBoardText(
-              style: _style,
-              text: _messages[i].message,
-              onCopyComplete: () => showSnackBar("信息复制完成"),
-            ),
-          );
-        } else {
-          var gifItems = <Widget>[];
-          gifUrls.forEach((_url) {
-            gifItems.add(_buildGifItem(_url));
-          });
-          contentItem = new Expanded(
-            child: new Column(
-              children: gifItems,
-            ),
-          );
-        }
-        return new Container(
-          padding: EdgeInsets.only(left: 5.0, right: 5.0),
-          child: new Row(
-            //对齐
-            textBaseline: TextBaseline.alphabetic,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            children: <Widget>[
-              new Text(
-                _username,
-                style: _style,
-              ),
-              contentItem,
-            ],
-          ),
+        return MessageItem(
+          context,
+          scaffoldKey: _key,
+          message: _messages[i],
         );
       });
-
-  Widget _buildImageItem(_username, _style, _file) => new Container(
-        padding: EdgeInsets.only(left: 5.0, right: 5.0),
-        child: new Row(
-          //对齐
-          textBaseline: TextBaseline.alphabetic,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          children: <Widget>[
-            new Text(
-              _username,
-              style: _style,
-            ),
-            new GestureDetector(
-              child: new Container(
-                width: ConstantValue.IMAGE_WIDTH,
-                height: ConstantValue.IMAGE_HEIGHT,
-                child: new Image.memory(_file),
-              ),
-              onTap: () {
-                _showImagePop(_file);
-              },
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildGifItem(_url) => new Container(
-        padding: EdgeInsets.only(left: 5.0, right: 5.0),
-        child: new GestureDetector(
-          child: new Container(
-            width: ConstantValue.IMAGE_WIDTH,
-            height: ConstantValue.IMAGE_HEIGHT,
-            child: new CachedNetworkImage(
-              imageUrl: _url,
-              placeholder: new CircularProgressIndicator(),
-            ),
-          ),
-          onTap: () {
-            _showGifPop(_url);
-          },
-        ),
-      );
 
   Widget _buildBottom() => new Container(
         decoration:
@@ -247,11 +152,17 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   void initState() {
     super.initState();
-    log("start initState....");
+    presenter = new HomePresenter(this);
+    subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      result == ConnectivityResult.none
+          ? showSnackBar("网络已断开")
+          : presenter.reStart();
+    });
     requestPermission();
     WidgetsBinding.instance.addObserver(this);
     _initNotification();
-    presenter = new HomePresenter(this);
     presenter.start();
   }
 
@@ -269,18 +180,19 @@ class _MyHomePageState extends State<MyHomePage>
     } else {
       _isBackground = false;
       _cancelAllNotifications();
-//      presenter.connect();
+      presenter.reStart();
     }
   }
 
   @override
   void dispose() {
-//    WidgetsBinding.instance.removeObserver(this);
+    subscription.cancel();
     super.dispose();
   }
 
   @override
-  void receiverMessage(Message message, bool isShowNotification) {
+  void receiverMessage(m.Message message, bool isShowNotification) {
+    if(message.message.isEmpty)return;
     setState(() {
       _messages.add(message);
       _count = message.count;
@@ -320,37 +232,6 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
-  void _showGifPop(_url) async {
-    await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return new GestureDetector(
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: new CachedNetworkImage(
-              imageUrl: _url,
-              placeholder: new RefreshProgressIndicator(),
-            ),
-          );
-        });
-  }
-
-  void _showImagePop(bytes) async {
-    await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return new GestureDetector(
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: new Image.memory(bytes),
-          );
-        });
-  }
-
   @override
   bool get wantKeepAlive => true;
 
@@ -364,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage>
   BuildContext getContext() => context;
 
   @override
-  Future showNotification(Message message) async {
+  Future showNotification(m.Message message) async {
     var channelId = message != null ? "message id" : 'channel id';
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         channelId, 'channel name', 'channel description',
@@ -385,14 +266,20 @@ class _MyHomePageState extends State<MyHomePage>
           RepeatInterval.EveryMinute,
           platformChannelSpecifics);
     } else {
-      await flutterLocalNotificationsPlugin.show(
-          0,
-          ConstantValue.APP_NAME,
-          message.type == ConstantValue.IMAGE
-              ? "${message.username}：[图片]"
-              : "${message.username}：${message.message}",
-          platformChannelSpecifics);
+      await flutterLocalNotificationsPlugin.show(0, ConstantValue.APP_NAME,
+          getNotificationsContent(message), platformChannelSpecifics);
     }
+  }
+
+  String getNotificationsContent(message) {
+    if (message.type == ConstantValue.IMAGE)
+      return "${message.username}：[图片]";
+    else if (message.type == ConstantValue.VIDEO)
+      return "${message.username}：[视频]";
+    else if (message.type == ConstantValue.GIF)
+      return "${message.username}：[GIF]";
+    else
+      return "${message.username}：${message.message}";
   }
 
   void _initNotification() {
@@ -419,18 +306,41 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   void requestPermission() {
 //    if (Platform.isAndroid)
-//      SimplePermissions.requestPermission(Permission.WriteExternalStorage);
+//      SimplePermissions.checkPermission(Permission.WriteExternalStorage)
+//          .then((_b) {
+//        if (!_b) {
+//          SimplePermissions.requestPermission(Permission.WriteExternalStorage);
+//        }
+//      });
+  }
+
+  @override
+  void hideProgress() {
+    Navigator.pop(context);
+  }
+
+  @override
+  void showProgress() async {
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (_) => Center(child: CircularProgressIndicator()),
+    );
   }
 }
 
 abstract class HomePageImpl {
   void showSnackBar(String text);
 
-  void receiverMessage(Message message, bool isShowNotification);
+  void receiverMessage(m.Message message, bool isShowNotification);
 
   void showUpdateDialog(String version);
 
-  void showNotification(Message message);
+  void showNotification(m.Message message);
+
+  void showProgress();
+
+  void hideProgress();
 
   void showDownloadProgress(double _progress);
 

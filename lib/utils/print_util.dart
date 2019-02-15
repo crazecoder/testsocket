@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
-
+import 'package:flutter/foundation.dart';
 void log(Object o) {
-  debugPrint(o.toString());
+  bool isDebug = false;
+  assert(isDebug = true);
+  if (isDebug) debugPrint(o);
 }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,6 +15,8 @@ abstract class HomePresenterImpl {
   void sendMessage(String text);
 
   void downloadApk();
+
+  void reStart();
 
   void pickImage(int type);
 
@@ -82,11 +83,15 @@ class HomePresenter extends HomePresenterImpl {
 
   @override
   void pickImage(int type) {
-    double width = MediaQuery.of(_view.getContext()).size.width;
-    var widthStr = "$width".split(".").elementAt(0);
-    _logic.getImage(type, int.parse(widthStr), () {
-      _view.showSnackBar("图片可能过大，请重试");
-    });
+    _logic.getImage(
+      type,
+      loading: () => _view.showProgress(),
+      success: () => _view.hideProgress(),
+      error: () {
+        _view.hideProgress();
+        _view.showSnackBar("图片可能过大，请重试");
+      },
+    );
   }
 
   @override
@@ -102,5 +107,11 @@ class HomePresenter extends HomePresenterImpl {
   @override
   void saveTheme(bool isDark) {
     _logic.saveThemeType(isDark);
+  }
+
+  @override
+  void reStart() {
+    stop();
+//    connect();
   }
 }

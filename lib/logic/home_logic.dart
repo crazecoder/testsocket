@@ -8,13 +8,14 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_file/open_file.dart';
+import 'package:flutter_luban/flutter_luban.dart';
 
 import '../bean/message.dart';
-import '../constant.dart';
 import '../utils/image_util.dart';
+import '../constant.dart';
 import '../utils/print_util.dart';
 import '../utils/prefs_util.dart';
-
+import '../utils/string_util.dart';
 
 abstract class HomeLogicImpl {
   Future getApkVersion();
@@ -33,7 +34,7 @@ abstract class HomeLogicImpl {
 
   initPlatformState();
 
-  getImage(int type, int width, Function error);
+  getImage(int type, {Function loading, Function success, Function error});
 
   int getConnectTimeMills();
 
@@ -71,6 +72,8 @@ class HomeLogic extends HomeLogicImpl {
   @override
   void connectSocket(
       {Function onReceiver, Function onError, Function onDone}) async {
+    if (_isConnected) return;
+    _isConnected = true;
     socket = await WebSocket.connect(ConstantValue.SOCKET_URL);
     _connectTimeMills = DateTime.now().millisecondsSinceEpoch;
     if (!_isReConnect) {
@@ -81,29 +84,36 @@ class HomeLogic extends HomeLogicImpl {
       socket.add(jsonStr);
     }
     _reConnectCount++;
-    socket.listen((event) {
-      var map = json.decode(event);
-      var msg = Message.fromJson(map);
-      onReceiver(msg);
-      _isConnected = true;
-      _isReConnect = true;
-      log("Server: $event");
-      _reConnectCount = 0;
-    }, onError: (_error) {
-      log("error==========");
-      onError();
-      socket.close().then((_) {
-        log("socket.close....");
-        connectSocket(onReceiver: onReceiver, onDone: onDone, onError: onError);
-      });
-    }, onDone: () {
-      _isConnected = false;
-      if (_reConnectCount >= _maxReConnect2Tips) onDone();
-      socket.close().then((_) {
-        log("socket.close....");
-        connectSocket(onReceiver: onReceiver, onDone: onDone, onError: onError);
-      });
-    }, cancelOnError: true);
+    socket.listen(
+      (event) {
+        var map = json.decode(event);
+        var msg = Message.fromJson(map);
+        onReceiver(msg);
+        _isConnected = true;
+        _isReConnect = true;
+        log("Server: $event");
+        _reConnectCount = 0;
+      },
+      onError: (_error) {
+        log("error==========");
+        onError();
+        socket.close().then((_) {
+          log("socket.close....");
+          connectSocket(
+              onReceiver: onReceiver, onDone: onDone, onError: onError);
+        });
+      },
+      onDone: () {
+        _isConnected = false;
+        if (_reConnectCount >= _maxReConnect2Tips) onDone();
+        socket.close().then((_) {
+          log("socket.close....");
+          connectSocket(
+              onReceiver: onReceiver, onDone: onDone, onError: onError);
+        });
+      },
+      cancelOnError: true,
+    );
   }
 
   @override
@@ -125,11 +135,13 @@ class HomeLogic extends HomeLogicImpl {
 
   @override
   void disConnectSocket() {
+    if (!_isConnected) return;
     Message m = Message(
-        _connectTimeMills, "已断开", _deviceInfo, ConstantValue.DISCONNECTED);
+        _connectTimeMills, "", _deviceInfo, ConstantValue.DISCONNECTED);
     var jsonStr = m.toJson();
     log(jsonStr);
     socket.add(jsonStr);
+    _isConnected = false;
 //    socket.close().then((_) {
 //      log("socket.close....");
 //    });
@@ -138,8 +150,17 @@ class HomeLogic extends HomeLogicImpl {
   @override
   void sendMessage(String text,
       {int messageType = ConstantValue.NORMAL, Function error}) {
+    print(socket.readyState);
     if (!_isConnected) {
       connectAndListen(onServerError: error);
+    }
+    var urls = getVideoUrl(text);
+    if (urls.length > 0) {
+      messageType = ConstantValue.VIDEO;
+    }
+    var urls1 = getGifUrl(text);
+    if (urls1.length > 0) {
+      messageType = ConstantValue.GIF;
     }
     var message = Message(_connectTimeMills, text, _deviceInfo, messageType);
     var jsonStr = message.toJson();
@@ -153,12 +174,10 @@ class HomeLogic extends HomeLogicImpl {
     DeviceInfoPlugin deviceInfo = new DeviceInfoPlugin();
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      _deviceInfo = androidInfo.model;
-      _deviceInfo ?? "android模拟器";
+      _deviceInfo = androidInfo.model ?? "android模拟器";
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-      _deviceInfo = iosInfo.utsname.machine;
-      _deviceInfo ?? "iOS模拟器";
+      _deviceInfo = iosInfo.utsname.machine ?? "iOS模拟器";
     }
   }
 
@@ -171,8 +190,8 @@ class HomeLogic extends HomeLogicImpl {
       Function onError,
       Function onDone}) {
     runZoned(() {
-      if(!_isConnected)
-      connectSocket(onError: onError, onDone: onDone, onReceiver: onReceiver);
+      if (!_isConnected)
+        connectSocket(onError: onError, onDone: onDone, onReceiver: onReceiver);
     }, onError: (_error) {
       log(_error);
       _isConnected = false;
@@ -181,22 +200,34 @@ class HomeLogic extends HomeLogicImpl {
   }
 
   @override
-  getImage(int type, int width, Function error) async {
-    var imageFile;
+  getImage(int type,
+      {Function loading, Function success, Function error}) async {
+    File imageFile;
     if (type == ConstantValue.GALLERY) {
       imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
     } else {
       imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
     }
     if (imageFile == null) return;
+    String base64;
     final tempDir = await getTemporaryDirectory();
-    var rand = "temp";
-    CompressObject compressObject =
-        new CompressObject(imageFile, tempDir.path, rand, width);
-    String filePath = await CompressImage.compressImage(compressObject);
+    loading();
+    CompressObject compressObject = CompressObject(
+      imageFile: imageFile,
+      //image
+      path: tempDir.path,
+      //compress to path
+      quality: 85,
+      //first compress quality, default 80
+      step: 9,
+      //compress quality step, The bigger the fast, Smaller is more accurate, default 6
+      mode: CompressMode.LARGE2SMALL, //default AUTO
+    );
+    String filePath = await Luban.compressImage(compressObject);
     File file = new File(filePath);
-    String base64 = CompressImage.getImageBase64(file);
+    base64 = CompressImage.getImageBase64(file);
     sendMessage(base64, messageType: ConstantValue.IMAGE, error: error);
+    success();
   }
 
   @override

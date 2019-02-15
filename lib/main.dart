@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bugly/flutter_bugly.dart';
 import 'ui/home.dart';
 import 'constant.dart';
 import 'theme.dart';
 import 'utils/prefs_util.dart';
 
-void main() => runApp(new MyApp());
+void main() {
+  debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+  FlutterBugly.postCatchedException(() {
+    runApp(MyApp());
+  });
+}
 
 class MyApp extends StatefulWidget {
+  MyApp() {
+    FlutterBugly.init(
+      androidAppId: "2a7d4fd48b",
+//      iOSAppId: "",
+//      autoDownloadOnWifi: true,
+      enableNotification: true,
+    );
+  }
+
   @override
   State<StatefulWidget> createState() => new _MyAppState();
 }

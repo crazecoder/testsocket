@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_html_view/flutter_html_text.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../utils/string_util.dart';
 
 class ClipBoardText extends StatelessWidget {
@@ -21,7 +21,7 @@ class ClipBoardText extends StatelessWidget {
     });
 
     if (urls.length > 0) {
-      textWidget = new HtmlText(
+      textWidget = new Html(
         data: content,
       );
     } else {
