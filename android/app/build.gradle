@@ -34,7 +34,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.testsocket"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -66,6 +66,11 @@ android {
     compileOptions {
         sourceCompatibility 1.8
         targetCompatibility 1.8
+    }
+    repositories {
+        flatDir {
+            dirs project(':flutter_ijkplayer').file('libs'), 'libs'
+        }
     }
 }
 

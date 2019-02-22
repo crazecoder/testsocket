@@ -36,7 +36,7 @@ abstract class HomeLogicImpl {
 
   getImage(int type, {Function loading, Function success, Function error});
 
-  int getConnectTimeMills();
+  String getDeviceId();
 
   saveThemeType(bool isDark);
 }
@@ -54,7 +54,7 @@ class HomeLogic extends HomeLogicImpl {
 
   var _deviceInfo;
 
-  int _connectTimeMills = 0;
+  String _deviceId;
 
   HomeLogic() {
     dio = new Dio();
@@ -75,10 +75,10 @@ class HomeLogic extends HomeLogicImpl {
     if (_isConnected) return;
     _isConnected = true;
     socket = await WebSocket.connect(ConstantValue.SOCKET_URL);
-    _connectTimeMills = DateTime.now().millisecondsSinceEpoch;
+//    _connectTimeMills = DateTime.now().millisecondsSinceEpoch;
     if (!_isReConnect) {
       Message m = Message(
-          _connectTimeMills, "已连接", _deviceInfo, ConstantValue.CONNECTED);
+          _deviceId, "已连接", _deviceInfo, ConstantValue.CONNECTED,DateTime.now().millisecondsSinceEpoch);
       var jsonStr = m.toJson();
       log(jsonStr);
       socket.add(jsonStr);
@@ -122,7 +122,7 @@ class HomeLogic extends HomeLogicImpl {
     String tempPath = tempDir.path;
     String savePath = '$tempPath/update.apk';
     await dio.download('${ConstantValue.HTTP_DOWNLOAD_URL}', savePath,
-        onProgress: f);
+        onReceiveProgress: f);
     _installApk(savePath);
   }
 
@@ -136,8 +136,8 @@ class HomeLogic extends HomeLogicImpl {
   @override
   void disConnectSocket() {
     if (!_isConnected) return;
-    Message m = Message(
-        _connectTimeMills, "", _deviceInfo, ConstantValue.DISCONNECTED);
+    Message m =
+        Message(_deviceId, "", _deviceInfo, ConstantValue.DISCONNECTED,DateTime.now().millisecondsSinceEpoch);
     var jsonStr = m.toJson();
     log(jsonStr);
     socket.add(jsonStr);
@@ -150,10 +150,9 @@ class HomeLogic extends HomeLogicImpl {
   @override
   void sendMessage(String text,
       {int messageType = ConstantValue.NORMAL, Function error}) {
-    print(socket.readyState);
-    if (!_isConnected) {
-      connectAndListen(onServerError: error);
-    }
+//    if (!_isConnected) {
+//      connectAndListen(onServerError: error);
+//    }
     var urls = getVideoUrl(text);
     if (urls.length > 0) {
       messageType = ConstantValue.VIDEO;
@@ -162,22 +161,24 @@ class HomeLogic extends HomeLogicImpl {
     if (urls1.length > 0) {
       messageType = ConstantValue.GIF;
     }
-    var message = Message(_connectTimeMills, text, _deviceInfo, messageType);
+    var message = Message(_deviceId, text, _deviceInfo, messageType,DateTime.now().millisecondsSinceEpoch);
     var jsonStr = message.toJson();
     log(jsonStr);
     socket.add(jsonStr);
   }
 
   @override
-  initPlatformState() async {
+  Future<Null> initPlatformState() async {
     log("start deviceinfo....");
     DeviceInfoPlugin deviceInfo = new DeviceInfoPlugin();
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       _deviceInfo = androidInfo.model ?? "android模拟器";
+      _deviceId = androidInfo.androidId;
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       _deviceInfo = iosInfo.utsname.machine ?? "iOS模拟器";
+      _deviceId = iosInfo.identifierForVendor;
     }
   }
 
@@ -193,7 +194,7 @@ class HomeLogic extends HomeLogicImpl {
       if (!_isConnected)
         connectSocket(onError: onError, onDone: onDone, onReceiver: onReceiver);
     }, onError: (_error) {
-      log(_error);
+      log(_error.toString());
       _isConnected = false;
       onServerError();
     });
@@ -231,7 +232,7 @@ class HomeLogic extends HomeLogicImpl {
   }
 
   @override
-  int getConnectTimeMills() => _connectTimeMills;
+  String getDeviceId() => _deviceId;
 
   @override
   saveThemeType(bool isDark) {

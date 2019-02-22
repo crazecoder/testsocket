@@ -1,11 +1,5 @@
-import 'dart:io';
-
-import 'package:package_info/package_info.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../logic/home_logic.dart';
 import '../ui/home.dart';
-import '../utils/print_util.dart';
 
 abstract class HomePresenterImpl {
   void start();
@@ -20,7 +14,6 @@ abstract class HomePresenterImpl {
 
   void pickImage(int type);
 
-  void launchUrl(url);
 
   void saveTheme(bool isDark);
 }
@@ -28,7 +21,7 @@ abstract class HomePresenterImpl {
 class HomePresenter extends HomePresenterImpl {
   HomeLogic _logic;
   HomePageImpl _view;
-  var _newVersionName;
+//  var _newVersionName;
 
   HomePresenter(this._view) {
     _logic = new HomeLogic();
@@ -36,19 +29,18 @@ class HomePresenter extends HomePresenterImpl {
 
   @override
   void start() async {
-    _logic.initPlatformState();
-    connect();
-    if (Platform.isAndroid) {
-      PackageInfo.fromPlatform().then((info) {
-        _logic.getApkVersion().then((data) {
-          log(info.buildNumber);
-          if (int.parse(info.buildNumber) < data["versionCode"]) {
-            _newVersionName = data["versionName"];
-            _view.showUpdateDialog(_newVersionName);
-          }
-        });
-      });
-    }
+    _logic.initPlatformState().then((_)=>connect());
+//    if (Platform.isAndroid) {
+//      PackageInfo.fromPlatform().then((info) {
+//        _logic.getApkVersion().then((data) {
+//          log(info.buildNumber);
+//          if (int.parse(info.buildNumber) < data["versionCode"]) {
+//            _newVersionName = data["versionName"];
+//            _view.showUpdateDialog(_newVersionName);
+//          }
+//        });
+//      });
+//    }
   }
 
   String getDeviceName() {
@@ -59,14 +51,22 @@ class HomePresenter extends HomePresenterImpl {
     await _logic.connectAndListen(
         onServerError: () => _view.showSnackBar("服务器未开启"),
         onReceiver: (message) => _view.receiverMessage(
-            message, message.id != _logic.getConnectTimeMills()),
+            message, message.id != _logic.getDeviceId()),
         onError: () => _view.showSnackBar("连接失败，请重新启动"),
         onDone: () => _view.showSnackBar("连接已断开，请检查网络后重新启动"));
+//    _countdownTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
+//      _logic.sendMessage(
+//        "",
+//        messageType: ConstantValue.HEART,
+//        error: () =>_view.showSnackBar("连接断开"),
+//      );
+//    });
   }
 
   @override
   void stop() {
     _logic.disConnectSocket();
+//    _countdownTimer.cancel();
   }
 
   @override
@@ -94,15 +94,6 @@ class HomePresenter extends HomePresenterImpl {
     );
   }
 
-  @override
-  void launchUrl(url) async {
-    print(url);
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
 
   @override
   void saveTheme(bool isDark) {
@@ -112,6 +103,7 @@ class HomePresenter extends HomePresenterImpl {
   @override
   void reStart() {
     stop();
-//    connect();
+    _view.showSnackBar("重新连接");
+    connect();
   }
 }

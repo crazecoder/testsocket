@@ -3,15 +3,17 @@ class Message {
   final String message;
   final int type;
   final int count;
-  final int id;
+  final String id;
+  final int time;
 
-  Message(this.id,this.message, this.username, this.type, {this.count = 0});
+  Message(this.id,this.message, this.username, this.type,this.time, {this.count = 0});
 
   Message.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         username = json['username'],
         message = json['message'],
         type = json['type'],
+        time = json['time'],
         count = json['count'];
 
 //  Map<String, dynamic> toJson() =>
@@ -20,5 +22,5 @@ class Message {
 //        'message': message,
 //      };
   String toJson() =>
-      '{"id": $id,"username": "$username","message": "$message","type":$type,"count":$count}';
+      '{"id": "$id","time": $time,"username": "$username","message": "$message","type":$type,"count":$count}';
 }

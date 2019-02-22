@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:toast/toast.dart';
 import 'package:connectivity/connectivity.dart';
 import '../bean/message.dart' as m;
 import '../constant.dart';
@@ -168,7 +169,8 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void showSnackBar(String text) {
-    _key.currentState.showSnackBar(new SnackBar(content: new Text(text)));
+    Toast.show(text, context,backgroundColor: Theme.of(context).primaryColor);
+//    _key.currentState.showSnackBar(new SnackBar(content: new Text(text)));
   }
 
   @override
@@ -192,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void receiverMessage(m.Message message, bool isShowNotification) {
-    if(message.message.isEmpty)return;
+    if (message.message.isEmpty) return;
     setState(() {
       _messages.add(message);
       _count = message.count;
@@ -204,6 +206,7 @@ class _MyHomePageState extends State<MyHomePage>
     });
     if (message.type != ConstantValue.CONNECTED &&
         message.type != ConstantValue.DISCONNECTED &&
+        message.type != ConstantValue.HEART &&
         isShowNotification &&
         _isBackground) {
       showNotification(message);

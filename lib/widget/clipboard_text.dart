@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_html/flutter_html.dart';
 import '../utils/string_util.dart';
 
@@ -23,6 +24,9 @@ class ClipBoardText extends StatelessWidget {
     if (urls.length > 0) {
       textWidget = new Html(
         data: content,
+        onLinkTap: (url){
+          _launchUrl(url);
+        },
       );
     } else {
       textWidget = new Text(
@@ -38,5 +42,13 @@ class ClipBoardText extends StatelessWidget {
         });
       },
     );
+  }
+
+  void _launchUrl(url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }
