@@ -1,8 +1,9 @@
 class ConstantValue {
   static const DEBUG = false;
-  static const APP_NAME = "阅后即焚";
+  static const APP_NAME = "FGChat";
 
   static const IP = "your server ip";
+
   static const BASE_URL = "http://$IP";
   static const HTTP_VERSION_PORT = ":8080";
   static const HTTP_VERSION_URL = '$BASE_URL$HTTP_VERSION_PORT/version';
@@ -15,7 +16,10 @@ class ConstantValue {
   static const NORMAL = 0;
   static const CONNECTED = 1;
   static const DISCONNECTED = -1;
+  static const HEART = -2;
   static const IMAGE = 2;
+  static const GIF = 3;
+  static const VIDEO = 4;
 
   static const IMAGE_WIDTH = 150.0;
   static const IMAGE_HEIGHT = 150.0;
