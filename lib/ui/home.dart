@@ -159,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage>
         .listen((ConnectivityResult result) {
       result == ConnectivityResult.none
           ? showSnackBar("网络已断开")
-          : presenter.reStart();
+          : presenter.reStart(true);
     });
     requestPermission();
     WidgetsBinding.instance.addObserver(this);
@@ -182,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage>
     } else {
       _isBackground = false;
       _cancelAllNotifications();
-      presenter.reStart();
+      presenter.reStart(false);
     }
   }
 

@@ -10,7 +10,7 @@ abstract class HomePresenterImpl {
 
   void downloadApk();
 
-  void reStart();
+  void reStart(bool showToast);
 
   void pickImage(int type);
 
@@ -101,9 +101,9 @@ class HomePresenter extends HomePresenterImpl {
   }
 
   @override
-  void reStart() {
+  void reStart(bool showToast) {
     stop();
-    _view.showSnackBar("重新连接");
+    showToast??_view.showSnackBar("重新连接");
     connect();
   }
 }

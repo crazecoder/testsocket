@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 //import 'package:flutter_gsyplayer/flutter_gsyplayer.dart';
@@ -64,7 +66,7 @@ class _MessageItemState extends State<MessageItem> {
           );
   }
 
-  Widget _buildContentItem(){
+  Widget _buildContentItem() {
     var content = widget.message.message;
     if (widget.message.type == ConstantValue.GIF) {
       var gifUrls = getGifUrl(content);
@@ -78,7 +80,8 @@ class _MessageItemState extends State<MessageItem> {
           children: gifItems,
         ),
       );
-    } else if (widget.message.type == ConstantValue.VIDEO) {
+    } else if (widget.message.type == ConstantValue.VIDEO &&
+        Platform.isAndroid) {
       var videoUrls = getVideoUrl(content);
       var videoItems = <Widget>[];
       videoUrls.forEach((_url) {
@@ -99,11 +102,12 @@ class _MessageItemState extends State<MessageItem> {
           onCopyComplete: () => _isStausMessage
               ? log("")
               : widget.scaffoldKey.currentState
-              .showSnackBar(SnackBar(content: Text("信息复制完成"))),
+                  .showSnackBar(SnackBar(content: Text("信息复制完成"))),
         ),
       );
     }
   }
+
   Widget _buildImageItem(_username, _style, _file) => new Container(
         padding: EdgeInsets.only(left: 5.0, right: 5.0),
         child: new Row(
