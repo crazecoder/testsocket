@@ -18,7 +18,7 @@ class MyApp extends StatefulWidget {
     FlutterBugly.init(
       androidAppId: "2a7d4fd48b",
 //      iOSAppId: "",
-//      autoDownloadOnWifi: true,
+      autoDownloadOnWifi: true,
       enableNotification: true,
     );
   }

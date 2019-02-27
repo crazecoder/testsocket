@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bugly/flutter_bugly.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:toast/toast.dart';
@@ -47,15 +48,19 @@ class _MyHomePageState extends State<MyHomePage>
       key: _key,
       appBar: new AppBar(
         actions: <Widget>[
-          new GestureDetector(
-            child: new Icon(_isDark ? Icons.brightness_2 : Icons.brightness_5),
-            onTap: () {
-              setState(() {
-                _isDark = !_isDark;
-                widget.changeTheme(_isDark);
-              });
-              presenter.saveTheme(_isDark);
-            },
+          Container(
+            padding: EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              child:
+                  new Icon(_isDark ? Icons.brightness_2 : Icons.brightness_5),
+              onTap: () {
+                setState(() {
+                  _isDark = !_isDark;
+                  widget.changeTheme(_isDark);
+                });
+                presenter.saveTheme(_isDark);
+              },
+            ),
           ),
         ],
         title: new Text(widget.title),
@@ -154,6 +159,11 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
     presenter = new HomePresenter(this);
+    FlutterBugly.getUpgradeInfo().then((UpgradeInfo info) {
+      if (info != null && info.id != null) {
+        showUpdateDialog(info.newFeature, info.apkUrl);
+      }
+    });
     subscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
@@ -169,7 +179,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void showSnackBar(String text) {
-    Toast.show(text, context,backgroundColor: Theme.of(context).primaryColor);
+    Toast.show(text, context, backgroundColor: Theme.of(context).primaryColor);
 //    _key.currentState.showSnackBar(new SnackBar(content: new Text(text)));
   }
 
@@ -213,7 +223,7 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 
-  Widget _buildDialog(String version) {
+  Widget _buildDialog(String version, String url) {
     return new UpdateDialog(
       _dialogKey,
       version,
@@ -221,17 +231,17 @@ class _MyHomePageState extends State<MyHomePage>
         showSnackBar(_msg);
       },
       () {
-        presenter.downloadApk();
+        presenter.downloadApk(url);
       },
     );
   }
 
   @override
-  void showUpdateDialog(String version) async {
+  void showUpdateDialog(String version, String url) async {
     await showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (_) => _buildDialog(version),
+      builder: (_) => _buildDialog(version, url),
     );
   }
 
@@ -330,6 +340,14 @@ class _MyHomePageState extends State<MyHomePage>
       builder: (_) => Center(child: CircularProgressIndicator()),
     );
   }
+
+  @override
+  void showDownloadFailed() {
+    setState(() {
+      _dialogKey?.currentState?.progress = 0.0;
+    });
+    showSnackBar("下载更新失败，请重试");
+  }
 }
 
 abstract class HomePageImpl {
@@ -337,7 +355,7 @@ abstract class HomePageImpl {
 
   void receiverMessage(m.Message message, bool isShowNotification);
 
-  void showUpdateDialog(String version);
+  void showUpdateDialog(String version, String url);
 
   void showNotification(m.Message message);
 
@@ -346,6 +364,8 @@ abstract class HomePageImpl {
   void hideProgress();
 
   void showDownloadProgress(double _progress);
+
+  void showDownloadFailed();
 
   void requestPermission();
 

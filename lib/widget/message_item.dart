@@ -148,6 +148,7 @@ class _MessageItemState extends State<MessageItem> {
                 url: _url,
                 autoPlay: true,
                 previewMills: 10 * 1000,
+                autoSound: false,
               ),
               GestureDetector(
                 onTap: () => play(url: _url),

@@ -20,7 +20,7 @@ import '../utils/string_util.dart';
 abstract class HomeLogicImpl {
   Future getApkVersion();
 
-  void downloadApk(Function f);
+  void downloadApk(Function f,Function error,String url);
 
   void _installApk(String path);
 
@@ -117,12 +117,17 @@ class HomeLogic extends HomeLogicImpl {
   }
 
   @override
-  void downloadApk(Function f) async {
+  void downloadApk(Function f,Function error,String url) async {
     Directory tempDir = await getExternalStorageDirectory();
     String tempPath = tempDir.path;
     String savePath = '$tempPath/update.apk';
-    await dio.download('${ConstantValue.HTTP_DOWNLOAD_URL}', savePath,
-        onReceiveProgress: f);
+//    await dio.download('${ConstantValue.HTTP_DOWNLOAD_URL}', savePath,
+//        onReceiveProgress: f);
+    await dio.download(url, savePath,
+        onReceiveProgress: f,options: Options(receiveTimeout: 5*60*1000)).catchError((_error){
+      error();
+      return _error;
+    });
     _installApk(savePath);
   }
 
@@ -140,7 +145,7 @@ class HomeLogic extends HomeLogicImpl {
         Message(_deviceId, "", _deviceInfo, ConstantValue.DISCONNECTED,DateTime.now().millisecondsSinceEpoch);
     var jsonStr = m.toJson();
     log(jsonStr);
-    socket.add(jsonStr);
+    socket?.add(jsonStr);
     _isConnected = false;
 //    socket.close().then((_) {
 //      log("socket.close....");

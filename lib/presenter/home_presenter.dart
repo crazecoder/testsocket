@@ -8,7 +8,7 @@ abstract class HomePresenterImpl {
 
   void sendMessage(String text);
 
-  void downloadApk();
+  void downloadApk(String url);
 
   void reStart(bool showToast);
 
@@ -75,10 +75,12 @@ class HomePresenter extends HomePresenterImpl {
   }
 
   @override
-  void downloadApk() {
+  void downloadApk(String url) {
     _logic.downloadApk((_received, _total) {
       _view.showDownloadProgress(_received / _total);
-    });
+    },(){
+      _view.showDownloadFailed();
+    },url);
   }
 
   @override

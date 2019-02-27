@@ -98,7 +98,7 @@ packages:
       name: dio
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.10"
+    version: "2.0.14"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -110,7 +110,7 @@ packages:
       name: flutter_bugly
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.1.4+2"
+    version: "0.1.5+1"
   flutter_html:
     dependency: "direct main"
     description:
@@ -123,7 +123,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "32f15717606e35e81d86e21e2747f92c63e82be2"
+      resolved-ref: e98bb37e8b819bc394ab9ae3d71ab6c40f82454c
       url: "git://github.com/crazecoder/flutter_ijkplayer_beta.git"
     source: git
     version: "0.0.1"
@@ -133,7 +133,7 @@ packages:
       name: flutter_local_notifications
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.5.1+2"
+    version: "0.5.2"
   flutter_luban:
     dependency: "direct main"
     description:
@@ -194,7 +194,7 @@ packages:
       name: open_file
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.2.2+2"
+    version: "1.2.3"
   path:
     dependency: transitive
     description:
