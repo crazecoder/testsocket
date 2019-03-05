@@ -29,6 +29,7 @@ class _MyHomePageState extends State<MyHomePage>
     with WidgetsBindingObserver, HomePageImpl, AutomaticKeepAliveClientMixin {
   var _controller = new TextEditingController();
   var _messages = <m.Message>[];
+  bool _auto = true;
   GlobalKey<ScaffoldState> _key = new GlobalKey();
 
   var _listController = ScrollController();
@@ -98,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage>
       itemBuilder: (_, i) {
         return MessageItem(
           context,
+          autoPlay: _auto,
           scaffoldKey: _key,
           message: _messages[i],
         );
@@ -167,6 +169,9 @@ class _MyHomePageState extends State<MyHomePage>
     subscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
+      setState(() {
+        _auto = result == ConnectivityResult.wifi;
+      });
       result == ConnectivityResult.none
           ? showSnackBar("网络已断开")
           : presenter.reStart(true);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bugly/flutter_bugly.dart';
+import 'package:flutter_stack_trace/flutter_stack_trace.dart';
 import 'ui/home.dart';
 import 'constant.dart';
 import 'theme.dart';
@@ -10,6 +11,8 @@ void main() {
   debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
   FlutterBugly.postCatchedException(() {
     runApp(MyApp());
+  },handler: (_details){
+    FlutterChain.printError(_details.exception, _details.stack);
   });
 }
 

@@ -12,17 +12,18 @@ import '../widget/clipboard_text.dart';
 import '../utils/print_util.dart';
 
 class MessageItem extends StatefulWidget {
+  final bool autoPlay;
   final GlobalKey<ScaffoldState> scaffoldKey;
   final m.Message message;
   final BuildContext context;
 
-  MessageItem(this.context, {this.scaffoldKey, this.message});
+  MessageItem(this.context, {this.scaffoldKey, this.message,this.autoPlay:true});
 
   @override
-  State<StatefulWidget> createState() => _MessageItemState();
+  State<StatefulWidget> createState() => MessageItemState();
 }
 
-class _MessageItemState extends State<MessageItem> {
+class MessageItemState extends State<MessageItem> {
   var _textStyle;
   var _statusTextStyle;
   var _username;
@@ -140,14 +141,14 @@ class _MessageItemState extends State<MessageItem> {
           height: ConstantValue.IMAGE_HEIGHT,
 //          child: GSYPlayer(
 //            url: _url,
-//            autoPlay: true,
+//            autoPlay: widget.autoPlay,
 //          ),
           child: Stack(
             children: <Widget>[
               FlutterIjkplayer(
                 url: _url,
-                autoPlay: true,
-                previewMills: 10 * 1000,
+                autoPlay: widget.autoPlay,
+                previewMills: 5 * 1000,
                 autoSound: false,
               ),
               GestureDetector(
